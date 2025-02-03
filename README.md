@@ -18,11 +18,15 @@ If you find this project useful for your research, please cite:
 ## Dependencies
 The code has been tested on Ubuntu 20.04 with Nvidia RTX 3090.
 
-Cuda >= 10.2
-OpenCV >= 3.3.0
-Boost >= 1.62.0
-cmake >= 2.8
-Besides make sure that your GPU Compute Capability matches the CMakeList.txt!!! Otherwise you won't get the depth results! For example, according to GPU Compute Capability, RTX3080's Compute Capability is 8.6. So you should set the cuda compilation parameter 'arch=compute_86,code=sm_86' or add a '-gencode arch=compute_86,code=sm_86'.
+- [Cuda](https://developer.nvidia.cn/zh-cn/cuda-toolkit) >= 10.2
+- [OpenCV](https://opencv.org/) >= 3.3.0
+- [Boost](https://www.boost.org/) >= 1.62.0
+- [cmake](https://cmake.org/) >= 2.8
+
+Besides make sure that your [GPU Compute Capability](https://en.wikipedia.org/wiki/CUDA) matches the CMakeList.txt.
+Otherwise you won't get the depth results! 
+For example, according to [GPU Compute Capability](https://en.wikipedia.org/wiki/CUDA), RTX3080's Compute Capability is 8.6. 
+So you should set the cuda compilation parameter 'arch=compute_86,code=sm_86' or add a '-gencode arch=compute_86,code=sm_86'.
 
 ## Usage
 Compile
