@@ -38,5 +38,7 @@ The code has been tested on Ubuntu 20.04 with Nvidia RTX 3090.
     Run ./DPE $data_folder to get reconstruction results.
     The result will be saved in the folder $data_folder/DPE, and the point cloud is saved as "DPE.ply"
 
+If you need to segment the sky, please refer to [MP-MVS](https://github.com/RongxuanTan/MP-MVS) and save the segmentation results in the $data_folder/blocks directory.
+
 ## Acknowledgements
 This code largely benefits from the following repositories: [APD-MVS](https://github.com/whoiszzj/APD-MVS), [HPM-MVS](https://github.com/CLinvx/HPM-MVS). Thanks to their authors for opening the source of their excellent works!
