@@ -2,7 +2,7 @@
 
 ## Overview
 
-![Overview](.\overview.png)
+![Overview](overview.png)
 
 ## About
 
