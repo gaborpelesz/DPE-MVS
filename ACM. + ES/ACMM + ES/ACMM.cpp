@@ -503,6 +503,75 @@ void ACMM::InuputInitialization(const std::string &dense_folder, const std::vect
         cameras[i].width = scaled_image_float.cols;
     }
 
+    {
+        cv::Mat scaled_image_uint, dst_image;
+        int max_image_size = params.max_image_size;
+
+        if (image_uint.cols > max_image_size || image_uint.rows > max_image_size) {
+            const float factor_x = static_cast<float>(max_image_size) / image_float.cols;
+            const float factor_y = static_cast<float>(max_image_size) / image_float.rows;
+            const float factor = std::min(factor_x, factor_y);
+
+            const int new_cols = std::round(image_float.cols * factor);
+            const int new_rows = std::round(image_float.rows * factor);
+
+            const float scale_x = new_cols / static_cast<float>(image_float.cols);
+            const float scale_y = new_rows / static_cast<float>(image_float.rows);
+
+            cv::Mat scaled_image_float;
+            cv::resize(image_float, scaled_image_float, cv::Size(new_cols, new_rows), 0, 0, cv::INTER_LINEAR);
+            scaled_image_float.convertTo(scaled_image_uint, CV_8UC1);
+        }
+
+        // 求像素中值
+    		int rows = scaled_image_uint.rows;
+    		int cols = scaled_image_uint.cols;
+    		int median_val = -1;
+    		float histogram[256] = { 0 };
+    		//先计算图像的直方图
+    		for (int i = 0; i < rows; ++i)
+    		{
+            ///获取i行首像素的指针
+            const uchar *p = scaled_image_uint.ptr<uchar>(i);
+            ///遍历i行像素
+            for (int j = 0; j < cols; ++j) {
+              histogram[int(*p++)]++;
+            }
+    		}
+    		int HalfNum = rows * cols / 2;
+    		int tempSum = 0;
+    		for (int i = 0; i < 255; i++) {
+            tempSum = tempSum + histogram[i];
+            if (tempSum > HalfNum) {
+              median_val = i;
+              break;
+            }
+    		}
+		
+    		const float sigma = 0.67;
+    		int threshold1 = (1 - sigma) * median_val;
+    		int threshold2 = median_val;
+
+		    cv::Canny(scaled_image_uint, dst_image, threshold1, threshold2, 3, true);
+
+        for (int y = 0; y < dst_image.rows; y++) {
+            if (dst_image.data[y * dst_image.cols + 1] == 0)
+                dst_image.data[y * dst_image.cols] = 0;
+            if (dst_image.data[y * dst_image.cols + dst_image.cols - 2] == 0)
+                dst_image.data[y * dst_image.cols + dst_image.cols - 1] = 0;
+        }
+        for (int x = 0; x < dst_image.cols; x++) {
+            if (dst_image.data[1 * dst_image.cols + x] == 0)
+                dst_image.data[0 * dst_image.cols + x] = 0;
+            if (dst_image.data[(dst_image.rows - 2) * dst_image.cols + x] == 0)
+                dst_image.data[(dst_image.rows - 1) * dst_image.cols + x] = 0;
+        }
+
+        edge_host = dst_image;
+        assert(edge_host.rows == cameras[0].height);
+        assert(edge_host.cols == cameras[0].width);
+    }
+  
     params.depth_min = cameras[0].depth_min * 0.6f;
     params.depth_max = cameras[0].depth_max * 1.2f;
     std::cout << "depthe range: " << params.depth_min << " " << params.depth_max << std::endl;
