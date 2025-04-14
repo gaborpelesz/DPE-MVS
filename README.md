@@ -10,11 +10,14 @@ The paper has been released and can be found at [Dual-Level Precision Edges Guid
 
 If you find this project useful for your research, please cite:
 >
-    @article{chen2024dual,
-        title={Dual-Level Precision Edges Guided Multi-View Stereo with Accurate Planarization},
-        author={Chen, Kehua and Yuan, Zhenlong and Mao, Tianlu and Wang, Zhaoqi},
-        journal={arXiv preprint arXiv:2412.20328},
-        year={2024}
+    @inproceedings{chen2025dual,
+      title={Dual-Level Precision Edges Guided Multi-View Stereo with Accurate Planarization},
+      author={Chen, Kehua and Yuan, Zhenlong and Mao, Tianlu and Wang, Zhaoqi},
+      booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+      volume={39},
+      number={2},
+      pages={2105--2113},
+      year={2025}
     }
 
 ## Dependencies
