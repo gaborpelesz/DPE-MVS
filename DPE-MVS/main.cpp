@@ -275,7 +275,6 @@ int main(int argc, char **argv) {
 			for (auto &problem : problems) {
 				problem.iteration = iteration_index;
 				problem.scale_size = static_cast<int>(std::pow(2, round_num - 1 - i)); // scale 
-				problem.scale_size = 1;
 				problem.params.scale_size = problem.scale_size;
 				{
 					auto &params = problem.params;
@@ -300,7 +299,7 @@ int main(int argc, char **argv) {
 		std::cout << "Round: " << i << " done\n";
 	}
 
-	RunFusion_TAT_Intermediate(dense_folder, problems);
+	RunFusion(dense_folder, problems);
 	{// delete files
 		for (size_t i = 0; i < problems.size(); ++i) {
 			const auto &problem = problems[i];
