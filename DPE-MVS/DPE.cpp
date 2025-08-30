@@ -1,4 +1,5 @@
 #include "DPE.h"
+#include <filesystem>
 
 #define _JACOBI_ROTATE(a, i, j, k, l) \
 	g = (a)[j][i]; \
@@ -290,9 +291,9 @@ cv::Mat EdgeSegment(const int scale, const cv::Mat& src_image, int mode, bool us
 	return img_connect;
 }
 
-bool ReadBinMat(const path &mat_path, cv::Mat &mat)
+bool ReadBinMat(const fs::path &mat_path, cv::Mat &mat)
 {
-	ifstream in(mat_path, std::ios_base::binary);
+	std::ifstream in(mat_path, std::ios_base::binary);
 	if (in.bad()) {
 		std::cerr << "Error opening file: " << mat_path << std::endl;
 		return false;
@@ -317,9 +318,9 @@ bool ReadBinMat(const path &mat_path, cv::Mat &mat)
 
 }
 
-bool WriteBinMat(const path &mat_path, const cv::Mat &mat) {
+bool WriteBinMat(const fs::path &mat_path, const cv::Mat &mat) {
 
-	ofstream out(mat_path, std::ios_base::binary);
+	std::ofstream out(mat_path, std::ios_base::binary);
 	if (out.bad()) {
 		std::cout << "Error opening file: " << mat_path << std::endl;
 		return false;
@@ -338,9 +339,9 @@ bool WriteBinMat(const path &mat_path, const cv::Mat &mat) {
 	return true;
 }
 
-bool ReadCamera(const path &cam_path, Camera &cam)
+bool ReadCamera(const fs::path &cam_path, Camera &cam)
 {
-	ifstream in(cam_path);
+	std::ifstream in(cam_path);
 	if (in.bad()) {
 		return false;
 	}
@@ -381,7 +382,7 @@ bool ReadCamera(const path &cam_path, Camera &cam)
 	return true;
 }
 
-bool ShowDepthMap(const path &depth_path, const cv::Mat& depth, float depth_min, float depth_max)
+bool ShowDepthMap(const fs::path &depth_path, const cv::Mat& depth, float depth_min, float depth_max)
 {
 	const float deltaDepth = depth_max - depth_min;
 	// save image
@@ -447,7 +448,7 @@ bool ShowDepthMap(const path &depth_path, const cv::Mat& depth, float depth_min,
 	return true;
 }
 
-bool ShowNormalMap(const path &normal_path, const cv::Mat &normal)
+bool ShowNormalMap(const fs::path &normal_path, const cv::Mat &normal)
 {
 	if (normal.empty()) {
 		return false;
@@ -472,7 +473,7 @@ bool ShowNormalMap(const path &normal_path, const cv::Mat &normal)
 	return true;
 }
 
-bool ShowWeakImage(const path &weak_path, const cv::Mat &weak) {
+bool ShowWeakImage(const fs::path &weak_path, const cv::Mat &weak) {
 	// show image
 	if (weak.empty()) {
 		return false;
@@ -501,7 +502,7 @@ bool ShowWeakImage(const path &weak_path, const cv::Mat &weak) {
 	return true;
 }
 
-bool ShowEdgeImage(const path &edge_path, const cv::Mat &edge) {
+bool ShowEdgeImage(const fs::path &edge_path, const cv::Mat &edge) {
 	if (edge.empty()) {
 		return false;
 	}
@@ -529,9 +530,9 @@ bool ShowEdgeImage(const path &edge_path, const cv::Mat &edge) {
 	return true;
 }
 
-bool ExportPointCloud(const path& point_cloud_path, std::vector<PointList>& pointcloud)
+bool ExportPointCloud(const fs::path& point_cloud_path, std::vector<PointList>& pointcloud)
 {
-	ofstream out(point_cloud_path, std::ios::binary);
+	std::ofstream out(point_cloud_path, std::ios::binary);
 	if (out.bad()) {
 		return false;
 	}
@@ -734,14 +735,14 @@ void DPE::InuputInitialization() {
 	images.clear();
 	cameras.clear();
 	// get folder
-	path image_folder = problem.dense_folder / path("images");
-	path cam_folder = problem.dense_folder / path("cams");
+	fs::path image_folder = problem.dense_folder / fs::path("images");
+	fs::path cam_folder = problem.dense_folder / fs::path("cams");
 	//path weak_folder = problem.dense_folder / path("weaks");
 	// =================================================
 	// read ref image and src images
 	// ref
 	{ 
-		path ref_image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+		fs::path ref_image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
 		cv::Mat_<uint8_t> image_uint = cv::imread(ref_image_path.string(), cv::IMREAD_GRAYSCALE);
 		cv::Mat image_float;
 		image_uint.convertTo(image_float, CV_32FC1);
@@ -751,7 +752,7 @@ void DPE::InuputInitialization() {
 	}
 	// src
 	for (const auto &src_idx : problem.src_image_ids) {
-		path src_image_path = image_folder / path(ToFormatIndex(src_idx) + ".jpg");
+		fs::path src_image_path = image_folder / fs::path(ToFormatIndex(src_idx) + ".jpg");
 		cv::Mat_<uint8_t> image_uint = cv::imread(src_image_path.string(), cv::IMREAD_GRAYSCALE);
 		cv::Mat image_float;
 		image_uint.convertTo(image_float, CV_32FC1);
@@ -767,7 +768,7 @@ void DPE::InuputInitialization() {
 	// read ref camera and src camera
 	// ref
 	{
-		path ref_cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
+		fs::path ref_cam_path = cam_folder / fs::path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
 		Camera cam;
 		ReadCamera(ref_cam_path, cam);
 		cam.width = width;
@@ -776,7 +777,7 @@ void DPE::InuputInitialization() {
 	}
 	// src
 	for (const auto &src_idx : problem.src_image_ids) {
-		path src_cam_path = cam_folder / path(ToFormatIndex(src_idx) + "_cam.txt");
+		fs::path src_cam_path = cam_folder / fs::path(ToFormatIndex(src_idx) + "_cam.txt");
 		Camera cam;
 		ReadCamera(src_cam_path, cam);
 		cam.width = width;
@@ -825,12 +826,12 @@ void DPE::InuputInitialization() {
 	// read depth form geom consistency
 	if (params_host.geom_consistency) {
 		depths.clear();
-		path ref_depth_path = problem.result_folder / path("depths.dmb");
+		fs::path ref_depth_path = problem.result_folder / fs::path("depths.dmb");
 		cv::Mat ref_depth;
 		ReadBinMat(ref_depth_path, ref_depth);
 		depths.push_back(ref_depth);
 		for (const auto &src_idx : problem.src_image_ids) {
-			path src_depth_path = problem.dense_folder / path("DPE") / path(ToFormatIndex(src_idx)) / path("depths.dmb");
+			fs::path src_depth_path = problem.dense_folder / fs::path("DPE") / fs::path(ToFormatIndex(src_idx)) / fs::path("depths.dmb");
 			cv::Mat src_depth;
 			ReadBinMat(src_depth_path, src_depth);
 			depths.push_back(src_depth);
@@ -845,7 +846,7 @@ void DPE::InuputInitialization() {
 	// =================================================
 	// read weak info
 	if (params_host.use_APD) {
-		path weak_info_path = problem.result_folder / path("weak.bin");
+		fs::path weak_info_path = problem.result_folder / fs::path("weak.bin");
 		if (!exists(weak_info_path)) {
 			std::cerr << "Can't find weak info file: " << weak_info_path.string() << std::endl;
 			exit(EXIT_FAILURE);
@@ -885,8 +886,8 @@ void DPE::InuputInitialization() {
 	selected_views_host = cv::Mat::zeros(height, width, CV_32SC1);
 	if (params_host.state != FIRST_INIT) {
 		// input plane hypotheses from existed result
-		path depth_path = problem.result_folder / path("depths.dmb");
-		path normal_path = problem.result_folder / path("normals.dmb");
+		fs::path depth_path = problem.result_folder / fs::path("depths.dmb");
+		fs::path normal_path = problem.result_folder / fs::path("normals.dmb");
 		cv::Mat depth, normal;
 		ReadBinMat(depth_path, depth);
 		ReadBinMat(normal_path, normal);
@@ -905,7 +906,7 @@ void DPE::InuputInitialization() {
 			}
 		}
 		{
-			path selected_view_path = problem.result_folder / path("selected_views.bin");
+			fs::path selected_view_path = problem.result_folder / fs::path("selected_views.bin");
 			ReadBinMat(selected_view_path, selected_views_host);
 			if (selected_views_host.cols != width || selected_views_host.rows != height) {
 				std::cerr << "Select view doesn't match the images' size!\n";
@@ -1032,7 +1033,7 @@ void DPE::SupportInitialization() {
 	if (problem.params.use_edge || problem.params.use_limit) {
 		int scale = 0;
 		while((1 << scale) < problem.scale_size) scale++;
-		path edge_path = problem.result_folder / path("edges_" + std::to_string(scale) + ".dmb");
+		fs::path edge_path = problem.result_folder / fs::path("edges_" + std::to_string(scale) + ".dmb");
 		// read image edge info
 		ReadBinMat(edge_path, edge_host);
 
@@ -1042,14 +1043,14 @@ void DPE::SupportInitialization() {
 		} else {
 			max_scale = scale;
 		}
-		path edge_low_res_path = problem.result_folder / path("edges_" + std::to_string(max_scale) + ".dmb");
+		fs::path edge_low_res_path = problem.result_folder / fs::path("edges_" + std::to_string(max_scale) + ".dmb");
 		ReadBinMat(edge_low_res_path, edge_low_res_host);
 		low_width = edge_low_res_host.cols;
 		low_height = edge_low_res_host.rows;
 	}
 
 	if (problem.params.use_label) {
-		path label_path = problem.result_folder / path("labels_" + std::to_string(scale) + ".dmb");
+		fs::path label_path = problem.result_folder / fs::path("labels_" + std::to_string(scale) + ".dmb");
 		ReadBinMat(label_path, label_host);
 	}
 }
@@ -1220,11 +1221,11 @@ float GetAngle(const cv::Vec3f &v1, const cv::Vec3f &v2)
 }
 
 // ETH version
-void RunFusion(const path &dense_folder, const std::vector<Problem> &problems)
+void RunFusion(const fs::path &dense_folder, const std::vector<Problem> &problems)
 {
 	int num_images = problems.size();
-	path image_folder = dense_folder / path("images");
-	path cam_folder = dense_folder / path("cams");
+	fs::path image_folder = dense_folder / fs::path("images");
+	fs::path cam_folder = dense_folder / fs::path("cams");
 
 	std::vector<cv::Mat> images;
 	std::vector<Camera> cameras;
@@ -1242,7 +1243,7 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems)
 	weaks.clear();
 	std::unordered_map<int, int> imageIdToindexMap;
 
-	path block_folder = dense_folder / path("blocks");
+	fs::path block_folder = dense_folder / fs::path("blocks");
 	bool use_block = false;
 	if (exists(block_folder)) {
 		use_block = true;
@@ -1251,23 +1252,23 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems)
 	for (int i = 0; i < num_images; ++i) {
 		const auto &problem = problems[i];
 		std::cout << "Reading image " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
-		path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+		fs::path image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
 		imageIdToindexMap.emplace(problem.ref_image_id, i);
 		cv::Mat image = cv::imread(image_path.string(), cv::IMREAD_COLOR);
-		path cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
+		fs::path cam_path = cam_folder / fs::path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
 		Camera camera;
 		ReadCamera(cam_path, camera);
 	
-		path depth_path = problem.result_folder / path("depths.dmb");
-		path normal_path = problem.result_folder / path("normals.dmb");
-		path weak_path = problem.result_folder / path("weak.bin");
+		fs::path depth_path = problem.result_folder / fs::path("depths.dmb");
+		fs::path normal_path = problem.result_folder / fs::path("normals.dmb");
+		fs::path weak_path = problem.result_folder / fs::path("weak.bin");
 		cv::Mat depth, normal, weak;
 		ReadBinMat(depth_path, depth);
 		ReadBinMat(normal_path, normal);
 		ReadBinMat(weak_path, weak);
 	
 		if (use_block) {
-			path block_path = block_folder / path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
+			fs::path block_path = block_folder / fs::path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
 			cv::Mat block_jpg = cv::imread(block_path.string(), cv::IMREAD_GRAYSCALE);
 			blocks.emplace_back(block_jpg);
 		}
@@ -1368,15 +1369,15 @@ void RunFusion(const path &dense_folder, const std::vector<Problem> &problems)
 			}
 		}
 	}
-	path ply_path = dense_folder / path("DPE") / path("DPE.ply");
+	fs::path ply_path = dense_folder / fs::path("DPE") / fs::path("DPE.ply");
 	ExportPointCloud(ply_path, PointCloud);
 }
 
-void RunFusion_TAT_Intermediate(const path &dense_folder, const std::vector<Problem> &problems)
+void RunFusion_TAT_Intermediate(const fs::path &dense_folder, const std::vector<Problem> &problems)
 {
 	int num_images = problems.size();
-	path image_folder = dense_folder / path("images");
-	path cam_folder = dense_folder / path("cams");
+	fs::path image_folder = dense_folder / fs::path("images");
+	fs::path cam_folder = dense_folder / fs::path("cams");
 	const float dist_base = 0.25f;
 	const float depth_base = 1.0f / 3500.0f;
 
@@ -1397,7 +1398,7 @@ void RunFusion_TAT_Intermediate(const path &dense_folder, const std::vector<Prob
 	blocks.clear();
 	std::unordered_map<int, int> imageIdToindexMap;
 
-	path block_folder = dense_folder / path("blocks");
+	fs::path block_folder = dense_folder / fs::path("blocks");
 	bool use_block = false;
 	if (exists(block_folder)) {
 		use_block = true;
@@ -1406,21 +1407,21 @@ void RunFusion_TAT_Intermediate(const path &dense_folder, const std::vector<Prob
 	for (int i = 0; i < num_images; ++i) {
 		const auto &problem = problems[i];
 		std::cout << "Reading image " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
-		path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+		fs::path image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
 		imageIdToindexMap.emplace(problem.ref_image_id, i);
 		cv::Mat image = cv::imread(image_path.string(), cv::IMREAD_COLOR);
-		path cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
+		fs::path cam_path = cam_folder / fs::path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
 		Camera camera;
 		ReadCamera(cam_path, camera);
 
-		path depth_path = problem.result_folder / path("depths.dmb");
-		path normal_path = problem.result_folder / path("normals.dmb");
+		fs::path depth_path = problem.result_folder / fs::path("depths.dmb");
+		fs::path normal_path = problem.result_folder / fs::path("normals.dmb");
 		cv::Mat depth, normal;
 		ReadBinMat(depth_path, depth);
 		ReadBinMat(normal_path, normal);
 
 		if (use_block) {
-			path block_path = block_folder / path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
+			fs::path block_path = block_folder / fs::path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
 			cv::Mat block_jpg = cv::imread(block_path.string(), cv::IMREAD_GRAYSCALE);
 			blocks.emplace_back(block_jpg);
 		}
@@ -1538,15 +1539,15 @@ void RunFusion_TAT_Intermediate(const path &dense_folder, const std::vector<Prob
 			}
 		}
 	}
-	path ply_path = dense_folder / path("DPE") / path("DPE.ply");
+	fs::path ply_path = dense_folder / fs::path("DPE") / fs::path("DPE.ply");
 	ExportPointCloud(ply_path, PointCloud);
 }
 
-void RunFusion_TAT_advanced(const path &dense_folder, const std::vector<Problem> &problems)
+void RunFusion_TAT_advanced(const fs::path &dense_folder, const std::vector<Problem> &problems)
 {
 	int num_images = problems.size();
-	path image_folder = dense_folder / path("images");
-	path cam_folder = dense_folder / path("cams");
+	fs::path image_folder = dense_folder / fs::path("images");
+	fs::path cam_folder = dense_folder / fs::path("cams");
 	const float dist_base = 0.25f;
 	const float depth_base = 1.0f / 3000.0f;
 
@@ -1564,7 +1565,7 @@ void RunFusion_TAT_advanced(const path &dense_folder, const std::vector<Problem>
 	blocks.clear();
 	std::unordered_map<int, int> imageIdToindexMap;
 
-	path block_folder = dense_folder / path("blocks");
+	fs::path block_folder = dense_folder / fs::path("blocks");
 	bool use_block = false;
 	if (exists(block_folder)) {
 		use_block = true;
@@ -1573,21 +1574,21 @@ void RunFusion_TAT_advanced(const path &dense_folder, const std::vector<Problem>
 	for (int i = 0; i < num_images; ++i) {
 		const auto &problem = problems[i];
 		std::cout << "Reading image " << std::setw(8) << std::setfill('0') << i << "..." << std::endl;
-		path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+		fs::path image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
 		imageIdToindexMap.emplace(problem.ref_image_id, i);
 		cv::Mat image = cv::imread(image_path.string(), cv::IMREAD_COLOR);
-		path cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
+		fs::path cam_path = cam_folder / fs::path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
 		Camera camera;
 		ReadCamera(cam_path, camera);
 
-		path depth_path = problem.result_folder / path("depths.dmb");
-		path normal_path = problem.result_folder / path("normals.dmb");
+		fs::path depth_path = problem.result_folder / fs::path("depths.dmb");
+		fs::path normal_path = problem.result_folder / fs::path("normals.dmb");
 		cv::Mat depth, normal;
 		ReadBinMat(depth_path, depth);
 		ReadBinMat(normal_path, normal);
 
 		if (use_block) {
-			path block_path = block_folder / path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
+			fs::path block_path = block_folder / fs::path("mask_" + std::to_string(problem.ref_image_id) + ".jpg");
 			cv::Mat block_jpg = cv::imread(block_path.string(), cv::IMREAD_GRAYSCALE);
 			blocks.emplace_back(block_jpg);
 		}
@@ -1687,14 +1688,14 @@ void RunFusion_TAT_advanced(const path &dense_folder, const std::vector<Problem>
 			}
 		}
 	}
-	path ply_path = dense_folder / path("DPE") / path("DPE.ply");
+	fs::path ply_path = dense_folder / fs::path("DPE") / fs::path("DPE.ply");
 	ExportPointCloud(ply_path, PointCloud);
 }
 
 void ExportDepthImagePointCloud(
-	const path& point_cloud_path, 
-	const path& image_path,
-	const path& cam_path,
+	const fs::path& point_cloud_path, 
+	const fs::path& image_path,
+	const fs::path& cam_path,
 	cv::Mat& depth,
 	float depth_min,
 	float depth_max

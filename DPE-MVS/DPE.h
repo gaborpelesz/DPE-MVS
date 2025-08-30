@@ -6,7 +6,6 @@
 #define CUDA_CHECK_ERROR() CudaCheckError(__FILE__, __LINE__)
 #define M_PI 3.14159265358979323846
 
-using namespace boost::filesystem;
 
 cv::Mat Roberts(const cv::Mat& srcImage);
 
@@ -18,32 +17,32 @@ void CudaSafeCall(const cudaError_t error, const std::string& file, const int li
 
 void CudaCheckError(const char* file, const int line);
 
-bool ReadBinMat(const path &mat_path, cv::Mat &mat);
+bool ReadBinMat(const fs::path &mat_path, cv::Mat &mat);
 
-bool WriteBinMat(const path &mat_path, const cv::Mat &mat);
+bool WriteBinMat(const fs::path &mat_path, const cv::Mat &mat);
 
-bool ReadCamera(const path &cam_path, Camera &cam);
+bool ReadCamera(const fs::path &cam_path, Camera &cam);
 
-bool ShowDepthMap(const path &depth_path, const cv::Mat& depth, float depth_min, float depth_max);
+bool ShowDepthMap(const fs::path &depth_path, const cv::Mat& depth, float depth_min, float depth_max);
 
-bool ShowNormalMap(const path &normal_path, const cv::Mat &normal);
+bool ShowNormalMap(const fs::path &normal_path, const cv::Mat &normal);
 
-bool ShowWeakImage(const path &weak_path, const cv::Mat &weak);
+bool ShowWeakImage(const fs::path &weak_path, const cv::Mat &weak);
 
-bool ShowEdgeImage(const path &edge_path, const cv::Mat &edge);
+bool ShowEdgeImage(const fs::path &edge_path, const cv::Mat &edge);
 
-bool ExportPointCloud(const path& point_cloud_path, std::vector<PointList>& pointcloud);
+bool ExportPointCloud(const fs::path& point_cloud_path, std::vector<PointList>& pointcloud);
 
-void ExportDepthImagePointCloud(const path& point_cloud_path, const path& image_path, const path& cam_path, cv::Mat& depth, float depth_min, float depth_max);
+void ExportDepthImagePointCloud(const fs::path& point_cloud_path, const fs::path& image_path, const fs::path& cam_path, cv::Mat& depth, float depth_min, float depth_max);
 
 std::string ToFormatIndex(int index);
 
 template <typename TYPE>
 void RescaleMatToTargetSize(const cv::Mat &src, cv::Mat &dst, const cv::Size2i &target_size);
 
-void RunFusion(const path &dense_folder, const std::vector<Problem> &problems);
-void RunFusion_TAT_Intermediate(const path &dense_folder, const std::vector<Problem> &problems);
-void RunFusion_TAT_advanced(const path &dense_folder, const std::vector<Problem> &problems);
+void RunFusion(const fs::path &dense_folder, const std::vector<Problem> &problems);
+void RunFusion_TAT_Intermediate(const fs::path &dense_folder, const std::vector<Problem> &problems);
+void RunFusion_TAT_advanced(const fs::path &dense_folder, const std::vector<Problem> &problems);
 
 struct cudaTextureObjects {
 	cudaTextureObject_t images[MAX_IMAGES];

@@ -1,13 +1,15 @@
 #include "main.h"
 #include "DPE.h"
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
-using namespace boost::filesystem;
 
-void GenerateSampleList(const path &dense_folder, std::vector<Problem> &problems)
+void GenerateSampleList(const fs::path &dense_folder, std::vector<Problem> &problems)
 {
-	path cluster_list_path = dense_folder / path("pair.txt");
+	fs::path cluster_list_path = dense_folder / fs::path("pair.txt");
 	problems.clear();
-	ifstream file(cluster_list_path);
+	std::ifstream file(cluster_list_path);
 	std::stringstream iss;
 	std::string line;
 
@@ -27,7 +29,7 @@ void GenerateSampleList(const path &dense_folder, std::vector<Problem> &problems
 		iss >> problem.ref_image_id;
 
 		problem.dense_folder = dense_folder;
-		problem.result_folder = dense_folder / path(OUT_NAME) / path(ToFormatIndex(problem.ref_image_id));
+		problem.result_folder = dense_folder / fs::path(OUT_NAME) / fs::path(ToFormatIndex(problem.ref_image_id));
 		create_directory(problem.result_folder);
 
 		int num_src_images;
@@ -52,7 +54,7 @@ bool CheckImages(const std::vector<Problem> &problems) {
 	if (problems.size() == 0) {
 		return false;
 	}
-	path image_path = problems[0].dense_folder / path("images") / path(ToFormatIndex(problems[0].ref_image_id) + ".jpg");
+	fs::path image_path = problems[0].dense_folder / fs::path("images") / fs::path(ToFormatIndex(problems[0].ref_image_id) + ".jpg");
 	cv::Mat image = cv::imread(image_path.string());
 	if (image.empty()) {
 		return false;
@@ -60,7 +62,7 @@ bool CheckImages(const std::vector<Problem> &problems) {
 	const int width = image.cols;
 	const int height = image.rows;
 	for (size_t i = 1; i < problems.size(); ++i) {
-		image_path = problems[i].dense_folder / path("images") / path(ToFormatIndex(problems[i].ref_image_id) + ".jpg");
+		image_path = problems[i].dense_folder / fs::path("images") / fs::path(ToFormatIndex(problems[i].ref_image_id) + ".jpg");
 		image = cv::imread(image_path.string());
 		if (image.cols != width || image.rows != height) {
 			return false;
@@ -74,8 +76,8 @@ void GetProblemEdges(const Problem &problem) {
 	int scale = 0;
 	while((1 << scale) < problem.scale_size) scale++;
 
-	path image_folder = problem.dense_folder / path("images");
-	path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+	fs::path image_folder = problem.dense_folder / fs::path("images");
+	fs::path image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
 	cv::Mat image_uint = cv::imread(image_path.string(), cv::IMREAD_GRAYSCALE);
 	cv::Mat src_img;
 	image_uint.convertTo(src_img, CV_32FC1);
@@ -89,7 +91,7 @@ void GetProblemEdges(const Problem &problem) {
 
 	if (problem.params.use_edge) {
 		// path edge_path = problem.result_folder / path("edges.dmb");
-		path edge_path = problem.result_folder / path("edges_" + std::to_string(scale) + ".dmb");
+		fs::path edge_path = problem.result_folder / fs::path("edges_" + std::to_string(scale) + ".dmb");
 		std::ifstream edge_file(edge_path.string());
 		bool edge_exists = edge_file.good();
 		edge_file.close();
@@ -100,7 +102,7 @@ void GetProblemEdges(const Problem &problem) {
 			std::cout << "Fine edge cost time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 			WriteBinMat(edge_path, edge);
 			if (problem.show_medium_result) {
-				path ref_image_edge_path = problem.result_folder / path("rawedge_" + std::to_string(scale) + ".jpg");
+				fs::path ref_image_edge_path = problem.result_folder / fs::path("rawedge_" + std::to_string(scale) + ".jpg");
 				cv::imwrite(ref_image_edge_path.string(), edge);
 			}
 		}
@@ -108,7 +110,7 @@ void GetProblemEdges(const Problem &problem) {
 
 	if (problem.params.use_label) {
 		// path label_path = problem.result_folder / path("labels.dmb");
-		path label_path = problem.result_folder / path("labels_" + std::to_string(scale) + ".dmb");
+		fs::path label_path = problem.result_folder / fs::path("labels_" + std::to_string(scale) + ".dmb");
 		std::ifstream label_file(label_path.string());
 		bool label_exists = label_file.good();
 		label_file.close();
@@ -119,7 +121,7 @@ void GetProblemEdges(const Problem &problem) {
 			std::cout << "Coarse edge cost time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 			WriteBinMat(label_path, label);
 			if (problem.show_medium_result) {
-				path ref_image_con_path = problem.result_folder / path("connect_" + std::to_string(scale) + ".jpg");
+				fs::path ref_image_con_path = problem.result_folder / fs::path("connect_" + std::to_string(scale) + ".jpg");
 				cv::imwrite(ref_image_con_path.string(), EdgeSegment(scale, image_uint, -1, false, problem.params.high_res_img));
 			}
 		}
@@ -132,7 +134,7 @@ int ComputeRoundNum(const std::vector<Problem> &problems) {
 	if (problems.size() == 0) {
 		return 0;
 	}
-	path image_path = problems[0].dense_folder / path("images") / path(ToFormatIndex(problems[0].ref_image_id) + ".jpg");
+	fs::path image_path = problems[0].dense_folder / fs::path("images") / fs::path(ToFormatIndex(problems[0].ref_image_id) + ".jpg");
 	cv::Mat image = cv::imread(image_path.string());
 	if (image.empty()) {
 		return 0;
@@ -175,29 +177,29 @@ void ProcessProblem(const Problem &problem) {
 		}
 	}
 	
-	path depth_path = problem.result_folder / path("depths.dmb");
+	fs::path depth_path = problem.result_folder / fs::path("depths.dmb");
 	WriteBinMat(depth_path, depth);
-	path normal_path = problem.result_folder / path("normals.dmb");
+	fs::path normal_path = problem.result_folder / fs::path("normals.dmb");
 	WriteBinMat(normal_path, normal);
-	path weak_path = problem.result_folder / path("weak.bin");
+	fs::path weak_path = problem.result_folder / fs::path("weak.bin");
 	WriteBinMat(weak_path, pixel_states);
-	path selected_view_path = problem.result_folder / path("selected_views.bin");
+	fs::path selected_view_path = problem.result_folder / fs::path("selected_views.bin");
 	WriteBinMat(selected_view_path, DPE.GetSelectedViews());
 
 	if (problem.show_medium_result) {
-		path depth_img_path = problem.result_folder / path("depth_" + std::to_string(problem.iteration) + ".jpg");
-		path normal_img_path = problem.result_folder / path("normal_" + std::to_string(problem.iteration) + ".jpg");
-		path weak_img_path = problem.result_folder / path("weak_" + std::to_string(problem.iteration) + ".jpg");
+		fs::path depth_img_path = problem.result_folder / fs::path("depth_" + std::to_string(problem.iteration) + ".jpg");
+		fs::path normal_img_path = problem.result_folder / fs::path("normal_" + std::to_string(problem.iteration) + ".jpg");
+		fs::path weak_img_path = problem.result_folder / fs::path("weak_" + std::to_string(problem.iteration) + ".jpg");
 		ShowDepthMap(depth_img_path, depth, DPE.GetDepthMin(), DPE.GetDepthMax());
 		ShowNormalMap(normal_img_path, normal);
 		ShowWeakImage(weak_img_path, pixel_states);
 
 		if ((problem.iteration + 1) % 4 == 0) {
-			path image_folder = problem.dense_folder / path("images");
-			path cam_folder = problem.dense_folder / path("cams");
-			path image_path = image_folder / path(ToFormatIndex(problem.ref_image_id) + ".jpg");
-			path cam_path = cam_folder / path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
-			path point_cloud_path = problem.result_folder / path("point_" + std::to_string(problem.iteration) + ".ply");
+			fs::path image_folder = problem.dense_folder / fs::path("images");
+			fs::path cam_folder = problem.dense_folder / fs::path("cams");
+			fs::path image_path = image_folder / fs::path(ToFormatIndex(problem.ref_image_id) + ".jpg");
+			fs::path cam_path = cam_folder / fs::path(ToFormatIndex(problem.ref_image_id) + "_cam.txt");
+			fs::path point_cloud_path = problem.result_folder / fs::path("point_" + std::to_string(problem.iteration) + ".ply");
 			// path point_cloud_path = problem.result_folder / path("point_test_" + std::to_string(problem.iteration) + ".ply");
 
 			// for (int r = 0; r < height; ++r) for (int c = 0; c < width; ++c) if (pixel_states.at<uchar>(r, c) != STRONG) depth.at<float>(r, c) = 0;
@@ -215,8 +217,8 @@ int main(int argc, char **argv) {
 		std::cerr << "USAGE: DPE dense_folder\n";
 		return EXIT_FAILURE;
 	}
-	path dense_folder(argv[1]);
-	path output_folder = dense_folder / path(OUT_NAME);
+	fs::path dense_folder(argv[1]);
+	fs::path output_folder = dense_folder / fs::path(OUT_NAME);
 	create_directory(output_folder);
 	// set cuda device for multi-gpu machine
 	int gpu_index = 0;
@@ -303,15 +305,15 @@ int main(int argc, char **argv) {
 	{// delete files
 		for (size_t i = 0; i < problems.size(); ++i) {
 			const auto &problem = problems[i];
-			remove(problem.result_folder / path("weak.bin"));
-			remove(problem.result_folder / path("depths.dmb"));
-			remove(problem.result_folder / path("normals.dmb"));
-			remove(problem.result_folder / path("selected_views.bin"));
-			remove(problem.result_folder / path("neighbour.bin")); 
-			remove(problem.result_folder / path("neighbour_map.bin"));
+			remove(problem.result_folder / fs::path("weak.bin"));
+			remove(problem.result_folder / fs::path("depths.dmb"));
+			remove(problem.result_folder / fs::path("normals.dmb"));
+			remove(problem.result_folder / fs::path("selected_views.bin"));
+			remove(problem.result_folder / fs::path("neighbour.bin")); 
+			remove(problem.result_folder / fs::path("neighbour_map.bin"));
 			for (int j = 0; j < round_num; j++) {
-				remove(problem.result_folder / path("edges_" + std::to_string(j) + ".dmb"));
-				remove(problem.result_folder / path("labels_" + std::to_string(j) + ".dmb"));
+				remove(problem.result_folder / fs::path("edges_" + std::to_string(j) + ".dmb"));
+				remove(problem.result_folder / fs::path("labels_" + std::to_string(j) + ".dmb"));
 			}
 		}
 	}

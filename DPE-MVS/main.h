@@ -30,10 +30,7 @@
 #include <cstdarg>
 #include <random>
 #include <unordered_map>
-// Includes Boost filesystem
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
+#include <filesystem>
 
 // Define some const var
 #define OUT_NAME "DPE"
@@ -46,7 +43,7 @@
 //#define DEBUG_COST_LINE
 //#define DEBUG_NEIGHBOUR
 
-using namespace boost::filesystem;
+namespace fs = std::filesystem;
 
 struct Camera {
 	float K[9];
@@ -110,8 +107,8 @@ struct Problem {
 	int index;
 	int ref_image_id;
 	std::vector<int> src_image_ids;
-	path dense_folder;
-	path result_folder;
+	fs::path dense_folder;
+	fs::path result_folder;
 	int scale_size = 1;
 	PatchMatchParams params;
 	bool show_medium_result = true;

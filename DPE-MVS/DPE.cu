@@ -1,6 +1,6 @@
 #include "DPE.h"
 
-#define DEBUG_COMPLEX
+// #define DEBUG_COMPLEX
 
 __device__  void sort_small(float *d, const int n)
 {
@@ -3153,7 +3153,7 @@ void DPE::RunPatchMatch() {
 	GenEdgeInform << <grid_size_full, block_size_full >> > (helper_cuda);
 	CUDA_SAFE_CALL(cudaDeviceSynchronize());
 #ifdef DEBUG_COMPLEX
-	path complex_path = problem.result_folder / path("complex.jpg");
+	fs::path complex_path = problem.result_folder / path("complex.jpg");
 	cv::Mat complex_host(height, width, CV_32F);
 	cudaMemcpy(complex_host.ptr<float>(0), complex_cuda, width * height * sizeof(float), cudaMemcpyDeviceToHost);
 	
