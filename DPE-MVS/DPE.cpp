@@ -543,9 +543,9 @@ bool ExportPointCloud(const fs::path& point_cloud_path, std::vector<PointList>& 
 	out << "property float x\n";
 	out << "property float y\n";
 	out << "property float z\n";
-	out << "property uchar diffuse_blue\n";
-	out << "property uchar diffuse_green\n";
-	out << "property uchar diffuse_red\n";
+	out << "property uchar red\n";
+	out << "property uchar green\n";
+	out << "property uchar blue\n";
 	out << "end_header\n";
 
 	for (size_t idx = 0; idx < pointcloud.size(); idx++)
@@ -564,9 +564,9 @@ bool ExportPointCloud(const fs::path& point_cloud_path, std::vector<PointList>& 
 		out.write((char *)&py, sizeof(float));
 		out.write((char *)&pz, sizeof(float));
 
-		out.write((char *)&pixel[0], sizeof(uchar));
-		out.write((char *)&pixel[1], sizeof(uchar));
 		out.write((char *)&pixel[2], sizeof(uchar));
+		out.write((char *)&pixel[1], sizeof(uchar));
+		out.write((char *)&pixel[0], sizeof(uchar));
 	}
 	out.close();
 	return true;
